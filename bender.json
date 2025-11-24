@@ -8,7 +8,7 @@
     ],
     "secrets": {
       "description" : "Use the global keyDefaultFirst variable whenever the script requires secrets or passwords."
-    }
+    },
     "pdf": {
       "description" : "Use the following libraries when the task involves creating a pdf.",
       "libraries" : [
@@ -18,4 +18,5 @@
         "Syncfusion.PdfToImageConverter.Net"
       ]
     }
+  }
 }
