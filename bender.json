@@ -1,30 +1,22 @@
 {
-  "name": "Http GET Request",
-  "description": "A Robogator C# script that performs an HTTP GET request and logs the result.",
-  "context": {
-    "robogator_version": "1.0",
-    "required_plugins": ["Robogator.Networking"],
-    "requires_gui": false
-  },
-  "rules": [
-    "Always include using System.Net.Http;",
-    "Use async/await pattern",
-    "Return data via `RG.Log`",
-    "Never block the main thread with .Result or .Wait()"
-  ],
-  "inputs": {
-    "parameters": [
-      {"name": "url", "type": "string", "description": "The target URL to fetch"}
-    ]
-  },
-  "output": {
-    "type": "CSharpCode",
-    "requirements": [
-      "Code must compile under Robogator's runtime",
-      "Should be wrapped in an async Task Main()"
-    ]
-  },
-  "example": {
-    "code": "using System;\nusing System.Net.Http;\nusing System.Threading.Tasks;\n\npublic class Script {\n    public async Task Main() {\n        var url = \"https://example.com\";\n        using var client = new HttpClient();\n\n        string result = await client.GetStringAsync(url);\n        RG.Log(result);\n    }\n}"
-  }
+  "description": "The following guidance helps you create a smoothly running Robogator script task from the very start.",
+  "c#":  {
+    "approach": [
+      "skip classes and namespaces; use top-level functions instead",
+      "using statements should include braces {}; explicitly declare variable types instead of var.",
+      "When using async, always await to ensure the script completes before proceeding."
+    ],
+    "secrets": {
+      "description" : "Use the global keyDefaultFirst variable whenever the script requires secrets or passwords."
+    }
+    "pdf": {
+      "description" : "Use the following libraries when the task involves creating a pdf.",
+      "libraries" : [
+        "Syncfusion.HtmlToPdfConverter.Net.Windows",
+        "Syncfusion.Pdf.Net.Core",
+        "Syncfusion.PDF.OCR.Net.Core",
+        "Syncfusion.PdfToImageConverter.Net"
+      ]
+    }
+  ]
 }
