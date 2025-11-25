@@ -11,11 +11,23 @@
   ],
   "pdf" : {
     "description" : "Use the following .net libraries when the task involves creating a pdf", 
-    "libs" : [
-      "Syncfusion.HtmlToPdfConverter.Net.Windows",
-      "Syncfusion.Pdf.Net.Core",
-      "Syncfusion.PDF.OCR.Net.Core",
-      "Syncfusion.PdfToImageConverter.Net"
-    ]
+    "libs" : {
+      "pdf" : {
+        "nuget": "Syncfusion.Pdf.Net.Core",
+        "namespace" : "Syncfusion.Pdf"
+      },
+      "htmlToPdf": {
+        "nuget" : "Syncfusion.HtmlToPdfConverter.Net.Windows",
+        "namespace" : "Syncfusion.HtmlConverter"
+      },
+      "ocr": {
+        "nuget" : "Syncfusion.PDF.OCR.Net.Core",
+        "namespace" : "Syncfusion.OCRProcessor"
+      },
+      "pdfToImage": {
+        "nuget" : "Syncfusion.PdfToImageConverter.Net",
+        "namespace" : "Syncfusion.Pdf.Parsing"
+      }
+    }
   }
 }
