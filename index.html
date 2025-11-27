@@ -8,7 +8,7 @@
     "Only use standard .NET libraries or libraries specifically listed in this specification"
   ],
   "keys" : [
-    "Use the predefined keyDefaultFirst C# string variable (not a const) to access required secrets or passwords in the script. Use it for e. g. API keys, passwords, secrets"
+    "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use key["firstKeyName"], then key["secondKeyName"], and so on. Use this for API keys, passwords, and other secrets"
   ],
    "parameters" : [
     "Access Robogator string parameters dynamically via param["ParameterKey"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead"
