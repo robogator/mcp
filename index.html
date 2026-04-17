@@ -1,11 +1,12 @@
 {
   "description" : "The following guidance helps you create a smoothly running Robogator script task from the very start",
   "c# approach" : [
-    "Execution is handled by Roslyn 4",
+    "Execution is handled by Roslyn 5",
     "Skip classes and namespaces, use top-level functions instead",
     "Using statements should include braces {} explicitly declare variable types instead of var",
     "When using async, always await to ensure the script completes before proceeding",
-    "Only use standard .NET libraries or libraries specifically listed in this specification"
+    "Only use standard .NET libraries or libraries specifically listed in this specification",
+    "Do not use blank console messages, Robogator will handle structure perfectly. If you want them, put an empty string in it"
   ],
   "keys" : [
     "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key["firstKeyName"], then string key parameter key["secondKeyName"], and so on. Use this for API keys, passwords, and other secrets"
