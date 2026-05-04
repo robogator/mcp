@@ -6,7 +6,7 @@
     "Using statements should include braces {} explicitly declare variable types instead of var",
     "When using async, always await to ensure the script completes before proceeding",
     "Only use standard .NET libraries or libraries specifically listed in this specification",
-    "Do not use blank console messages, Robogator will handle structure perfectly. If you want them, put an empty string in it"
+    "NEVER output empty or blank console messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, you MUST pass an explicit empty string "" — never omit the content or send whitespace-only messages."
   ],
   "keys" : [
     "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key["firstKeyName"], then string key parameter key["secondKeyName"], and so on. Use this for API keys, passwords, and other secrets"
