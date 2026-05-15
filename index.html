@@ -6,13 +6,13 @@
     "Using statements should include braces {} explicitly declare variable types instead of var",
     "When using async, always await to ensure the script completes before proceeding",
     "Only use standard .NET libraries or libraries specifically listed in this specification",
-    "NEVER output empty or blank console messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, you MUST pass an explicit empty string "" — never omit the content or send whitespace-only messages."
+    "NEVER output empty or blank console messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, you MUST pass an explicit empty string \"\" — never omit the content or send whitespace-only messages."
   ],
   "keys" : [
-    "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key["firstKeyName"], then string key parameter key["secondKeyName"], and so on. Use this for API keys, passwords, and other secrets"
+    "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key[\"firstKeyName\"], then string key parameter key[\"secondKeyName\"], and so on. Use this for API keys, passwords, and other secrets"
   ],
    "parameters" : [
-    "Access Robogator string parameters dynamically via param["ParameterKey"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead"
+    "Access Robogator string parameters dynamically via param[\"ParameterKey\"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead"
   ],
   "pdf" : {
     "description" : "Use the following .net libraries when the task involves creating a pdf", 
