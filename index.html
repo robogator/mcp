@@ -1,5 +1,6 @@
 {
   "description" : "The following guidance helps you create a smoothly running Robogator script task from the very start",
+  "dotnetVersion" : "8.0.22",
   "c# approach" : [
     "Execution is handled by Roslyn 5",
     "Skip classes and namespaces, use top-level functions instead",
@@ -14,26 +15,95 @@
    "parameters" : [
     "Access Robogator string parameters dynamically via param[\"ParameterKey\"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead"
   ],
-  "pdf" : {
-    "description" : "Use the following .net libraries when the task involves creating a pdf", 
-    "libs" : {
-      "pdf" : {
-        "nuget": "Syncfusion.Pdf.Net.Core",
-        "namespace" : "Syncfusion.Pdf",
-        "images" : "PdfBitmap is the Syncfusion type for rendering images in a PDF and uses an image stream PdfBitmap image = new PdfBitmap(imageStream), Syncfusion.Pdf does not accept a System.Drawing.Bitmap in the PdfBitmap constructor. It expects either: a Stream, or a file path"
-      },
-      "htmlToPdf": {
-        "nuget" : "Syncfusion.HtmlToPdfConverter.Net.Windows",
-        "namespace" : "Syncfusion.HtmlConverter (not Syncfusion.PDF.HtmlConverter)"
-      },
-      "ocr": {
-        "nuget" : "Syncfusion.PDF.OCR.Net.Core",
-        "namespace" : "Syncfusion.OCRProcessor"
-      },
-      "pdfToImage": {
-        "nuget" : "Syncfusion.PdfToImageConverter.Net",
-        "namespace" : "Syncfusion.Pdf.Parsing"
-      }
+  "cancellation" : {
+    "description" : "Support the kill switch that cancels a running C# script at runtime. You may need to manually place cancellation stops in the script",
+    "default" : "Every Chat message creation checks for an ongoing cancellation by default",
+    "longRunningLoops" : "For long running loops where no Chat message is created during the loop, call Script.CancellationCheck() inside the loop. This lets the script be killed in a well-behaved and traceable way",
+    "method" : "Script.CancellationCheck();",
+    "example" : "using System.Threading; Console.WriteLine(\"Long running loop has started\"); for (int i = 0; i < 100; i++) { Script.CancellationCheck(); Thread.Sleep(2000); }"
+  },
+  "chatFormatting" : {
+    "description" : "Special inline markers in Console.WriteLine output that Robogator renders in the Chat message. These only apply to Chat message content written to the console",
+    "links" : {
+      "marker" : "%",
+      "usage" : "Wrap a link with % at the start and % at the end to make it a one-click action. Works for web links and local file/folder paths. Robogator decides automatically whether to open the standard browser (web link), open Explorer (folder), or open the default app (file)",
+      "example" : "Console.WriteLine(@\"Open the web link %https://robogator.io% or a local directory %C:\\temp%\");"
+    },
+    "bold" : {
+      "marker" : "*",
+      "usage" : "Wrap a part of the message with * at the start and * at the end to render that part in bold",
+      "example" : "Console.WriteLine(\"Hello *World!* is bold\");"
+    },
+    "json" : {
+      "marker" : "~",
+      "usage" : "Wrap a serialized JSON string with ~ at the start and ~ at the end to render it as fully formatted, visually appealing JSON in the Chat message",
+      "example" : "string response = JsonSerializer.Serialize(obj); Console.WriteLine(\"~\" + response + \"~\");"
+    }
+  },
+  "libraries" : {
+    "description" : "All NuGet libraries available to the script in addition to standard .NET. Do not use any library not listed here",
+    "pdf" : {
+      "nuget": "Syncfusion.Pdf.Net.Core",
+      "version" : "33.2.10",
+      "namespace" : "Syncfusion.Pdf",
+      "use" : "Create and edit PDFs",
+      "images" : "PdfBitmap is the Syncfusion type for rendering images in a PDF and uses an image stream PdfBitmap image = new PdfBitmap(imageStream), Syncfusion.Pdf does not accept a System.Drawing.Bitmap in the PdfBitmap constructor. It expects either: a Stream, or a file path"
+    },
+    "htmlToPdf" : {
+      "nuget" : "Syncfusion.HtmlToPdfConverter.Net.Windows",
+      "version" : "33.2.10",
+      "namespace" : "Syncfusion.HtmlConverter (not Syncfusion.PDF.HtmlConverter)",
+      "use" : "Convert HTML to PDF"
+    },
+    "ocr" : {
+      "nuget" : "Syncfusion.PDF.OCR.Net.Core",
+      "version" : "33.2.10",
+      "namespace" : "Syncfusion.OCRProcessor",
+      "use" : "OCR text from scanned PDFs"
+    },
+    "pdfToImage" : {
+      "nuget" : "Syncfusion.PdfToImageConverter.Net",
+      "version" : "33.2.10",
+      "namespace" : "Syncfusion.Pdf.Parsing",
+      "use" : "Render PDF pages to images"
+    },
+    "sqlServer" : {
+      "nuget" : "Microsoft.Data.SqlClient",
+      "version" : "7.0.1",
+      "namespace" : "Microsoft.Data.SqlClient",
+      "use" : "Connect to and query SQL Server databases"
+    },
+    "browserAutomation" : {
+      "nuget" : "Microsoft.Playwright",
+      "version" : "1.60.0",
+      "namespace" : "Microsoft.Playwright",
+      "use" : "Headless/headful browser automation and web scraping",
+      "note" : "Requires browser binaries in the runtime. If not preinstalled, run Microsoft.Playwright.Program.Main(new string[]{\"install\"}) once before launching a browser"
+    },
+    "microsoftGraph" : {
+      "nuget" : "Microsoft.Graph",
+      "version" : "6.1.0",
+      "namespace" : "Microsoft.Graph",
+      "use" : "Microsoft 365 / Graph API: mail, OneDrive, Teams, users, calendar, etc.",
+      "note" : "Authenticate by building GraphServiceClient with a credential from Azure.Identity, e.g. new ClientSecretCredential(tenantId, clientId, clientSecret)"
+    },
+    "azureIdentity" : {
+      "nuget" : "Azure.Identity",
+      "version" : "1.21.0",
+      "namespace" : "Azure.Identity",
+      "use" : "Credential types (ClientSecretCredential, DefaultAzureCredential, etc.) for Microsoft Graph and other Azure SDK clients"
+    },
+    "outlookMessages" : {
+      "nuget" : "MsgReader",
+      "version" : "6.0.12",
+      "namespace" : "MsgReader.Outlook",
+      "use" : "Parse Outlook .msg and .eml files (subject, body, attachments)"
+    },
+    "ssh" : {
+      "nuget" : "SSH.NET",
+      "version" : "2025.1.0",
+      "namespace" : "Renci.SshNet",
+      "use" : "SSH command execution, SFTP and SCP file transfer"
     }
   }
 }
