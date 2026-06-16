@@ -22,6 +22,15 @@
     "method" : "Script.CancellationCheck();",
     "example" : "using System.Threading; Console.WriteLine(\"Long running loop has started\"); for (int i = 0; i < 100; i++) { Script.CancellationCheck(); Thread.Sleep(2000); }"
   },
+  "errorLogging": {
+    "description": "Manually set the state of a Chat message to 'Error occurred in runtime' while still writing a message to the Chat. Use this to log partial errors during a running Task without necessarily aborting it",
+    "method": "Console.WriteLineError(\"This is an error\");",
+    "behavior": "Writes the supplied text to the Chat and simultaneously sets that Chat message state to 'Error occurred in runtime'",
+    "tryCatch": "Combine with try/catch so you can track errors even when the Task runs all the way to completion. This lets you record partial failures inside catch blocks while letting the rest of the Task continue",
+    "trailStatistic": "Every partial error logged via Console.WriteLineError is counted toward the Trail statistic",
+    "finishedTaskState": "If one or more partial errors were logged via Console.WriteLineError, the finished Task state is 'Error occurred in runtime'",
+    "example": "try { Console.WriteLine(\"Processing record\"); /* work that may fail */ } catch (Exception ex) { Console.WriteLineError(\"This is an error: \" + ex.Message); }"
+  },    
   "chatFormatting" : {
     "description" : "Special inline markers in Console.WriteLine output that Robogator renders in the Chat message. These only apply to Chat message content written to the console",
     "links" : {
