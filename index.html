@@ -7,7 +7,7 @@
     "Using statements should include braces {} explicitly declare variable types instead of var",
     "When using async, always await to ensure the script completes before proceeding",
     "Only use standard .NET libraries or libraries specifically listed in this specification",
-    "NEVER add a library reference directive of any kind. #r \"nuget: Npgsql, 10.0.3\", #r \"Npgsql.dll\", #:package Npgsql@10.0.3 and <PackageReference> are all invalid here and break the Roslyn compiler. Every library listed under 'libraries' is already referenced by the host, so a plain using directive for the documented namespace is the only thing a script needs. See 'references' for details",
+    "NEVER add a library reference directive of any kind. #r \"nuget: Npgsql, 10.0.3\", #r \"Npgsql.dll\", #:package Npgsql@10.0.3 and &lt;PackageReference&gt; are all invalid here and break the Roslyn compiler. Every library listed under 'libraries' is already referenced by the host, so a plain using directive for the documented namespace is the only thing a script needs. See 'references' for details",
     "NEVER output empty or blank console messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, you MUST pass an explicit empty string \"\" — never omit the content or send whitespace-only messages."
   ],
   "keys": [
