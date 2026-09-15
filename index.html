@@ -1,57 +1,52 @@
 {
-  "description": "The following guidance helps you create a smoothly running Robogator script task from the very start",
+  "description": "The following guidance helps you create a smoothly running Robogator script task from the very start. Robogator Tasks can be written in C# or PowerShell. C# is the default",
+  "readThisFirst": {
+    "whyThisIsFirst": "If this document is truncated, these rules still apply. Everything below expands on them",
+    "rules": [
+      "Write the Task in C# unless the user asked for PowerShell or only has PowerShell. See 'languageSelection'",
+      "C#: NEVER emit a reference directive. No #r, no #:package, no PackageReference, no dotnet add package. A plain using directive is the only permitted form. See 'references'",
+      "Use ONLY the libraries under 'libraries'. If something needed is not there, say so and solve it with standard .NET instead. Never write code against a library that is not listed",
+      "PowerShell: every Robogator variable goes in ONE param() block on the very first line, nothing above it, spelled exactly as in 'powershellVariables'",
+      "Secrets come from Keys, never from a Parameter and never hardcoded. C#: keyDefaultFirst or key[\"name\"]. PowerShell: $keyDefaultFirst or $YourKeyName",
+      "Chat messages are the only output the user sees. C#: Console.WriteLine. PowerShell: Write-Host. Never emit an empty or whitespace-only message; pass an explicit \"\" if a blank line is truly needed",
+      "PowerShell Write-Verbose, Write-Debug, Write-Warning and Write-Progress are OFF by default. Never use them for output the user must see",
+      "Cancellation must be coded by hand. C#: Script.CancellationCheck() in silent loops. PowerShell: has no equivalent, so emit a Write-Host inside long loops or the Terminate button will not work",
+      "Console.WriteLineError and Script.CancellationCheck are C# only. If the Task needs either, recommend C#",
+      "Tell the user which Parameters and Keys to create on the Task, named exactly as the script expects"
+    ]
+  },
+  "languageSelection": {
+    "default": "c#",
+    "rule": "Always write the Task in C# unless one of the conditions under 'usePowerShellWhen' applies. C# has priority",
+    "usePowerShellWhen": [
+      "The user explicitly asks for a PowerShell script, a .ps1 file, or says the Task type in Robogator is PowerShell",
+      "The user states they only have PowerShell available, or that they do not want C#",
+      "The task is built around PowerShell-native tooling that has no reasonable .NET equivalent, for example an existing PowerShell module the user already relies on (ActiveDirectory, ExchangeOnlineManagement, Az, Pester, and similar)"
+    ],
+    "platformPreferenceIsCSharp": "Robogator's own wiki article 'Best practices for PowerShell coding on the Robogator platform' recommends replacing PowerShell code with an equivalent C# implementation for better performance and greater control, and suggests using AI to do the porting. So C# is not only this specification's default, it is the platform's documented recommendation",
+    "doNotMix": "One Task is one language. Never emit a C# script that shells out to PowerShell, or a PowerShell script that compiles C#, just to work around a missing feature. Pick the language and stay in it",
+    "ifUnclear": "If the user has not said which language and nothing above applies, write C# and mention in one line that a PowerShell version is available on request",
+    "featureGap": "Two Robogator features documented for C# have no PowerShell equivalent: Script.CancellationCheck() and Console.WriteLineError(). If the Task genuinely needs a silent long-running cancellable loop or a Chat message flagged as 'Error occurred in runtime', say so and recommend C#. See 'cancellation' and 'errorLogging'"
+  },
   "dotnetVersion": "10.0.10",
+  "powerShellSdkVersion": "7.6.6",
+  "codeLanguageRuntimes": {
+    "csharp": "Microsoft.CodeAnalysis.CSharp.Scripting (5.9.0)",
+    "powershell": "Microsoft.PowerShell.SDK (7.6.6)",
+    "note": "These are the two script runtimes the Robogator host embeds. A Task is one or the other"
+  },
   "c# approach": [
-    "Execution is handled by Roslyn 5",
+    "Execution is handled by the Roslyn scripting engine, Microsoft.CodeAnalysis.CSharp.Scripting 5.9.0",
     "Skip classes and namespaces, use top-level functions instead",
     "Using statements should include braces {} explicitly declare variable types instead of var",
     "When using async, always await to ensure the script completes before proceeding",
     "Only use standard .NET libraries or libraries specifically listed in this specification",
-    "NEVER add a library reference directive of any kind. #r \"nuget: Npgsql, 10.0.3\", #r \"Npgsql.dll\", #:package Npgsql@10.0.3 and &lt;PackageReference&gt; are all invalid here and break the Roslyn compiler. Every library listed under 'libraries' is already referenced by the host, so a plain using directive for the documented namespace is the only thing a script needs. See 'references' for details",
+    "NEVER add a library reference directive of any kind. #r \"nuget: Npgsql, 10.0.3\", #r \"Npgsql.dll\", #:package Npgsql@10.0.3 and <PackageReference> are all invalid here and break the Roslyn compiler. Every library listed under 'libraries' is already referenced by the host, so a plain using directive for the documented namespace is the only thing a script needs. See 'references' for details",
     "NEVER output empty or blank console messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, you MUST pass an explicit empty string \"\" — never omit the content or send whitespace-only messages."
   ],
-  "keys": [
-    "If a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key[\"firstKeyName\"], then string key parameter key[\"secondKeyName\"], and so on. Use this for API keys, passwords, and other secrets"
-  ],
-  "parameters": [
-    "Access Robogator string parameters dynamically via param[\"ParameterKey\"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead"
-  ],
-  "cancellation": {
-    "description": "Support the kill switch that cancels a running C# script at runtime. You may need to manually place cancellation stops in the script",
-    "default": "Every Chat message creation checks for an ongoing cancellation by default",
-    "longRunningLoops": "For long running loops where no Chat message is created during the loop, call Script.CancellationCheck() inside the loop. This lets the script be killed in a well-behaved and traceable way",
-    "method": "Script.CancellationCheck();",
-    "example": "using System.Threading; Console.WriteLine(\"Long running loop has started\"); for (int i = 0; i < 100; i++) { Script.CancellationCheck(); Thread.Sleep(2000); }"
-  },
-  "errorLogging": {
-    "description": "Manually set the state of a Chat message to 'Error occurred in runtime' while still writing a message to the Chat. Use this to log partial errors during a running Task without necessarily aborting it",
-    "method": "Console.WriteLineError(\"This is an error\");",
-    "behavior": "Writes the supplied text to the Chat and simultaneously sets that Chat message state to 'Error occurred in runtime'",
-    "tryCatch": "Combine with try/catch so you can track errors even when the Task runs all the way to completion. This lets you record partial failures inside catch blocks while letting the rest of the Task continue",
-    "trailStatistic": "Every partial error logged via Console.WriteLineError is counted toward the Trail statistic",
-    "finishedTaskState": "If one or more partial errors were logged via Console.WriteLineError, the finished Task state is 'Error occurred in runtime'",
-    "example": "try { Console.WriteLine(\"Processing record\"); /* work that may fail */ } catch (Exception ex) { Console.WriteLineError(\"This is an error: \" + ex.Message); }"
-  },
-  "chatFormatting": {
-    "description": "Special inline markers in Console.WriteLine output that Robogator renders in the Chat message. These only apply to Chat message content written to the console",
-    "links": {
-      "marker": "%",
-      "usage": "Wrap a link with % at the start and % at the end to make it a one-click action. Works for web links and local file/folder paths. Robogator decides automatically whether to open the standard browser (web link), open Explorer (folder), or open the default app (file)",
-      "example": "Console.WriteLine(@\"Open the web link %https://robogator.io% or a local directory %C:\\temp%\");"
-    },
-    "bold": {
-      "marker": "*",
-      "usage": "Wrap a part of the message with * at the start and * at the end to render that part in bold",
-      "example": "Console.WriteLine(\"Hello *World!* is bold\");"
-    },
-    "json": {
-      "marker": "~",
-      "usage": "Wrap a serialized JSON string with ~ at the start and ~ at the end to render it as fully formatted, visually appealing JSON in the Chat message",
-      "example": "string response = JsonSerializer.Serialize(obj); Console.WriteLine(\"~\" + response + \"~\");"
-    }
-  },
   "references": {
     "description": "How libraries become available to a script. Read this before writing any using directive",
+    "appliesTo": "C# only. PowerShell has no equivalent reference directive, see 'powershellModules'",
     "rule": "Standard .NET and every library listed under 'libraries' are already loaded and referenced by the Robogator host. A script declares nothing and installs nothing. A using directive for the documented namespace is both sufficient and the only permitted form",
     "forbidden": [
       "#r \"nuget: Npgsql, 10.0.3\"",
@@ -70,48 +65,48 @@
     "troubleshooting": "A CS0246 error such as 'The type or namespace name Npgsql could not be found' is never fixed by adding a reference directive in the script. It means the host has not referenced the assembly, which is a host configuration issue outside the script"
   },
   "libraries": {
-    "description": "All NuGet libraries available to the script in addition to standard .NET. This list is exhaustive. Do not use any library not listed here and never add one via a reference directive — see 'references'. Each entry is preloaded by the host and reached with a plain using directive for the given namespace",
+    "description": "All NuGet libraries available to a Task script in addition to standard .NET. This list is exhaustive. Do not use any library not listed here and never add one via a reference directive - see 'references'. Each entry is preloaded by the host and reached with a plain using directive for the given namespace. The Robogator host references further libraries for its own internal use; those are NOT available to Task scripts, are not listed here, and must never be used. This list describes the C# scripting host, see 'powershellModules' for PowerShell",
     "pdf": {
       "nuget": "Syncfusion.Pdf.Net.Core",
-      "version": "34.2.2",
+      "version": "34.2.7",
       "namespace": "Syncfusion.Pdf",
       "use": "Create and edit PDFs",
       "images": "PdfBitmap is the Syncfusion type for rendering images in a PDF and uses an image stream PdfBitmap image = new PdfBitmap(imageStream), Syncfusion.Pdf does not accept a System.Drawing.Bitmap in the PdfBitmap constructor. It expects either: a Stream, or a file path"
     },
     "htmlToPdf": {
       "nuget": "Syncfusion.HtmlToPdfConverter.Net.Windows",
-      "version": "34.2.2",
+      "version": "34.2.7",
       "namespace": "Syncfusion.HtmlConverter (not Syncfusion.PDF.HtmlConverter)",
       "use": "Convert HTML to PDF"
     },
     "ocr": {
       "nuget": "Syncfusion.PDF.OCR.Net.Core",
-      "version": "34.2.2",
+      "version": "34.2.7",
       "namespace": "Syncfusion.OCRProcessor",
       "use": "OCR text from scanned PDFs"
     },
     "pdfToImage": {
       "nuget": "Syncfusion.PdfToImageConverter.Net",
-      "version": "34.2.2",
+      "version": "34.2.7",
       "namespace": "Syncfusion.Pdf.Parsing",
       "use": "Render PDF pages to images"
     },
     "sqlServer": {
       "nuget": "Microsoft.Data.SqlClient",
-      "version": "7.0.2",
+      "version": "7.0.3",
       "namespace": "Microsoft.Data.SqlClient",
       "use": "Connect to and query SQL Server databases"
     },
     "browserAutomation": {
       "nuget": "Microsoft.Playwright",
-      "version": "1.61.0",
+      "version": "1.62.0",
       "namespace": "Microsoft.Playwright",
       "use": "Headless/headful browser automation and web scraping",
-      "note": "Requires browser binaries in the runtime. If not preinstalled, run Microsoft.Playwright.Program.Main(new string[]{\"install\"}) once before launching a browser"
+      "note": "Requires browser binaries in the runtime. If not preinstalled, run Microsoft.Playwright.Program.Main(new string[]{\"install\"}) once before launching a browser. This is the only supported way to drive a browser from a Task"
     },
     "microsoftGraph": {
       "nuget": "Microsoft.Graph",
-      "version": "6.5.0",
+      "version": "6.6.0",
       "namespace": "Microsoft.Graph",
       "use": "Microsoft 365 / Graph API: mail, OneDrive, Teams, users, calendar, etc.",
       "note": "Authenticate by building GraphServiceClient with a credential from Azure.Identity, e.g. new ClientSecretCredential(tenantId, clientId, clientSecret)"
@@ -124,7 +119,7 @@
     },
     "outlookMessages": {
       "nuget": "MsgReader",
-      "version": "6.1.0",
+      "version": "6.1.1",
       "namespace": "MsgReader.Outlook",
       "use": "Parse Outlook .msg and .eml files (subject, body, attachments)"
     },
@@ -141,5 +136,229 @@
       "use": "Connect to and query PostgreSQL databases",
       "note": "Bind passwords via keys, never inline: string connString = \"Host=srv;Database=db;Username=user;Password=\" + keyDefaultFirst. Parameters are positional: use $1, $2 in the SQL and cmd.Parameters.AddWithValue(value) in order. For timestamp with time zone columns, DateTime values must have Kind=Utc or Npgsql throws"
     }
+  },
+  "powershell approach": [
+    "Execution is handled by the hosted PowerShell SDK 7.6.6. The script runs inside the Robogator host process, not in a separate powershell.exe, so it is PowerShell 7 syntax and PowerShell 7 module compatibility",
+    "THE SINGLE MOST IMPORTANT RULE: every Robogator proprietary variable the script uses (Parameters, Keys, Task and Account context, neighbor and followed Task lists, license days) MUST be declared in ONE param() block on the very first line of the script. Nothing may precede it, not even a comment. Only after that declaration are the variables usable in the lines below. The wiki repeats this sentence in every single PowerShell article: to access Robogator proprietary variables with PowerShell, you have to first initialize all variables on the first line of the script and after that it is possible to access the variables in the underlying script lines",
+    "The variable names inside param() are not free choice. They are bound by name by the host, they are case-sensitive, and the exact spellings are listed under 'powershellVariables'",
+    "The script is a plain script body. Do not wrap the logic in a function that is never called, and do not emit a module manifest",
+    "Do not create separate modules for reusable logic. Keep all code inside the single Task script to maximize portability and eliminate dependency headaches. This is the platform's documented best practice",
+    "Do not attempt multithreading inside one Task. To run work in parallel, clone the Task and start the clones together. This is the platform's documented best practice and gives better handling, scalability, error tracking and more predictable behavior",
+    "Write Chat messages with Write-Host. One Write-Host call produces one Robogator Chat message. Write-Output pushes objects down the pipeline and is not a Chat message",
+    "NEVER output empty or blank Chat messages. Robogator handles all structural spacing automatically. If a blank line is absolutely required, pass an explicit empty string: Write-Host \"\" — never call Write-Host with no argument and never send whitespace-only messages",
+    "Write-Verbose, Write-Warning, Write-Progress and Write-Debug are hidden by default. They only reach the Chat if the matching Robogator Setting is switched on. Never rely on them for output the user must see. See 'powershellStreamModes'",
+    "Use full cmdlet names and full parameter names, never aliases. Write-Host not echo, Get-ChildItem not gci, ForEach-Object not %",
+    "Set $ErrorActionPreference = 'Stop' right after the param() block so failures surface instead of silently continuing, then use try/catch around the parts that may fail",
+    "Only use modules that are actually installed on the machine the Task runs on. The host does not install modules for the script. Never emit Install-Module in a Task script. If a module is required, say so in the response so the user can install it once, and guard with Import-Module at the top",
+    "Do not call exit or [Environment]::Exit. Let the script run to its end so Robogator can close the Trail cleanly",
+    "Avoid Read-Host, Pause, and anything else that waits for console input. A Task runs unattended and will hang"
+  ],
+  "powershellVariables": {
+    "description": "Every Robogator value available to a PowerShell Task, with the exact host-bound variable name. All of them are declared in the same single first-line param() block and are read only",
+    "declarationRule": "param() must be the very first line. Declare only the variables the script actually uses, comma separated",
+    "combinedExample": "param($SourceFolder, $keyDefaultFirst, $CurrentTaskTitle, $neighborTasks)",
+    "parameters": {
+      "declaration": "param($TaskParameter)",
+      "access": "$TaskParameter",
+      "naming": "The variable name must match the Parameter name configured on the Task exactly, including case. TaskParameter is only the wiki's example name. Always state in the response which Parameter names the user must create on the Task",
+      "readOnly": "Parameters are read only and cannot be reassigned during the Task script runtime",
+      "typing": "Parameters arrive as strings. Cast explicitly where a number or date is needed, for example [int]$MaxAgeDays",
+      "secrets": "Never pass API keys, passwords or other secrets through a Parameter. Use Keys",
+      "example": "param($TaskParameter)\nWrite-Host $TaskParameter"
+    },
+    "keyByName": {
+      "declaration": "param($MyKey)",
+      "access": "$MyKey",
+      "naming": "The variable name must match the name of the Key added to the Task. MyKey is only the wiki's example name",
+      "storage": "Key secrets are stored as hash values in the Robogator database and are only available as decoded values during script runtime",
+      "prerequisite": "The Key must first be added to the Task in Robogator, otherwise the variable is not bound",
+      "example": "param($MyKey)\nWrite-Host \"MyKey is: \" $MyKey"
+    },
+    "keyDefaultFirst": {
+      "declaration": "param($keyDefaultFirst)",
+      "access": "$keyDefaultFirst",
+      "use": "Returns the first Key secret set on the Task, whichever Key that currently is. Prefer this when the Task uses exactly one Key, because the script does not need editing if the Key on the Task is swapped",
+      "example": "param($keyDefaultFirst)\nWrite-Host \"First secure key value of this task is: \" $keyDefaultFirst"
+    },
+    "currentTaskUuid": {
+      "declaration": "param($CurrentTaskUuid)",
+      "returns": "string, e.g. 888cec5b-6615-4e3d-80ed-8a328a4f71ba"
+    },
+    "currentTaskTitle": {
+      "declaration": "param($CurrentTaskTitle)",
+      "returns": "string, the current Task title"
+    },
+    "currentAccountUuid": {
+      "declaration": "param($CurrentAccountUuid)",
+      "returns": "string, e.g. 75839be4-89e9-4c00-b507-e7e9418e3e62"
+    },
+    "currentAccountTitle": {
+      "declaration": "param($CurrentAccountTitle)",
+      "returns": "string, the current Account title"
+    },
+    "currentInstanceUuid": {
+      "declaration": "param($CurrentInstanceUuid)",
+      "returns": "string, e.g. fbfa8388-7a23-46a9-a318-7f86f4b96955. Identifies the started run, not the Task definition"
+    },
+    "neighborTasks": {
+      "declaration": "param($neighborTasks)",
+      "returns": "array of Task uuid strings: every Task in the Account except the executing Task itself",
+      "example": "param($neighborTasks)\nforeach ($uuid in $neighborTasks) {\n    Write-Host $uuid\n}"
+    },
+    "followed": {
+      "declaration": "param($followed)",
+      "returns": "array of Task uuid strings that this Task will trigger after it finishes. The list is unique, so a Task reachable both directly and through a Followed by Account appears only once",
+      "example": "param($followed)\nforeach ($uuid in $followed) {\n    Write-Host $uuid\n}"
+    },
+    "licenseExpiresInDays": {
+      "declaration": "param($licenseExpiresInDays)",
+      "returns": "integer, remaining days on the current Master Plan license, e.g. 21. Always -1 when the Beginner Plan is active"
+    },
+    "exactSpelling": "Names are case-sensitive and bound by the host. Note the lowercase first letter on $keyDefaultFirst, $neighborTasks, $followed and $licenseExpiresInDays, against the uppercase $CurrentTaskUuid, $CurrentTaskTitle, $CurrentAccountUuid, $CurrentAccountTitle, $CurrentInstanceUuid"
+  },
+  "powershellModules": {
+    "description": "How libraries reach a PowerShell Task",
+    "rule": "A PowerShell Task has everything that ships with PowerShell 7.6 plus whatever modules are already installed on that machine. The Robogator host does not install modules for the script",
+    "noOwnModules": "Do not factor reusable logic into your own module. The platform best practice is to keep everything in the single Task script for portability and to avoid dependency problems",
+    "neverDo": [
+      "Install-Module anywhere in a Task script",
+      "Install-PackageProvider or Register-PSRepository in a Task script",
+      "Set-ExecutionPolicy in a Task script",
+      "Assuming a Microsoft 365, Azure, or Active Directory module is present"
+    ],
+    "correct": "Import-Module ActiveDirectory",
+    "guard": "When a Task depends on a non-builtin module, put the Import-Module call directly after the param() block, and name the required module and its install command in the response so the user installs it once, outside the Task",
+    "dotNetTypes": "The .NET 10 base class library is reachable from PowerShell with [System.IO.File], [System.Net.Http.HttpClient] and so on. The NuGet packages listed under 'libraries' are referenced by the host for C# scripting. Do not assume they are loadable as types inside a PowerShell Task. For PDF, OCR, Playwright, Graph and PostgreSQL work, write the Task in C# instead",
+    "http": "Prefer Invoke-RestMethod and Invoke-WebRequest over constructing HttpClient by hand"
+  },
+  "chatMessages": {
+    "description": "Robogator Chat messages are another term for console output messages. Console.WriteLine in C# and Write-Host in PowerShell both produce them",
+    "powershell": {
+      "method": "Write-Host \"Hello World!\"",
+      "behavior": "The preferred way to write to the Robogator Chat with PowerShell. One call produces one Chat message"
+    },
+    "csharp": {
+      "method": "Console.WriteLine(\"Hello World!\");"
+    }
+  },
+  "chatFormatting": {
+    "description": "Special inline markers in Chat message content that Robogator renders in the Chat message. Documented separately and identically for C# and PowerShell",
+    "links": {
+      "marker": "%",
+      "usage": "Wrap a link with % at the start and % at the end to make it a one-click action. Works for web links and local file/folder paths. Robogator decides automatically whether to open the standard browser (web link), open Explorer (folder), or open the default app (file)",
+      "powershellExample": "Write-Host \"Open the web link %https://robogator.io% or a local directory %C:\\temp%\"",
+      "csharpExample": "Console.WriteLine(@\"Open the web link %https://robogator.io% or a local directory %C:\\temp%\");"
+    },
+    "bold": {
+      "marker": "*",
+      "usage": "Wrap a part of the message with * at the start and * at the end to render that part in bold",
+      "powershellExample": "Write-Host \"Hello *World!* is bold\"",
+      "csharpExample": "Console.WriteLine(\"Hello *World!* is bold\");"
+    },
+    "json": {
+      "marker": "~",
+      "usage": "Wrap a serialized JSON string with ~ at the start and ~ at the end to render it as fully formatted, visually appealing JSON in the Chat message",
+      "powershellExample": "$obj = [ordered]@{\n    name = \"Dundee\"\n    age = 27\n    city = \"Zurich\"\n    is_student = $false\n}\n$response = $obj | ConvertTo-Json -Compress\nWrite-Host \"~$response~\"",
+      "powershellNotes": "Use [ordered]@{} so the key order is preserved. ConvertTo-Json defaults to a depth of 2, so add -Depth 10 for nested objects",
+      "csharpExample": "string response = JsonSerializer.Serialize(obj); Console.WriteLine(\"~\" + response + \"~\");"
+    },
+    "powershellQuoting": "The wiki examples use double quotes, which is correct because $response must interpolate and because %, * and ~ carry no meaning to PowerShell. Only watch for a literal dollar sign in message text, which must be escaped as `$"
+  },
+  "powershellStreamModes": {
+    "description": "PowerShell's verbose, debug, warning and progress streams can be surfaced as Robogator Chat messages, but each is gated behind a Robogator Setting and all four are deactivated by default",
+    "criticalRule": "Never use these for output the user must see. On a default Robogator installation the message is silently discarded. Anything the user needs to read goes through Write-Host",
+    "settingsChangeProcedure": "Settings view, type true or false into the labeled setting, press enter, value turns green on success. Requires designer mode on, and a Robogator restart before the change takes effect",
+    "modes": {
+      "debug": {
+        "setting": "009 PowerShell debug mode",
+        "default": "deactivated",
+        "code": "$DebugPreference = \"Continue\"\nWrite-Debug \"This is a debug message\"",
+        "note": "$DebugPreference must be set to Continue in the script as well, otherwise PowerShell itself suppresses the message"
+      },
+      "verbose": {
+        "setting": "010 PowerShell verbose mode",
+        "default": "deactivated",
+        "code": "$VerbosePreference = \"Continue\"\nWrite-Verbose \"This is a verbose message\"",
+        "note": "$VerbosePreference must be set to Continue in the script as well"
+      },
+      "warning": {
+        "setting": "011 PowerShell warning mode",
+        "default": "deactivated",
+        "code": "Write-Warning \"This is a warning message\"",
+        "note": "No preference variable needed, warnings are shown by PowerShell by default and only the Robogator Setting gates them"
+      },
+      "progress": {
+        "setting": "012 PowerShell progress mode",
+        "default": "deactivated",
+        "code": "Write-Progress \"This is a progress message\"",
+        "note": "Renders as a raw field dump, not a clean line. The wiki example produces: parent = -1 id = 0 act = This is a progress message stat = Processing cur = pct = -1 sec = -1 type = Processing. Avoid it. Use Write-Host for progress reporting instead"
+      }
+    }
+  },
+  "cancellation": {
+    "description": "Support the kill switch that cancels a running script at runtime. You may need to manually place cancellation stops in the script",
+    "appliesToEveryLanguage": "Cancellation logic must be implemented manually inside each Task script. If a Task was started in the current Robogator instance but does not stop after Terminate Task is clicked, the cancellation logic is not set up correctly in the script",
+    "default": "Every Chat message creation checks for an ongoing cancellation by default. This is what makes a Write-Host or Console.WriteLine call double as a cancellation checkpoint",
+    "csharp": {
+      "longRunningLoops": "For long running loops where no Chat message is created during the loop, call Script.CancellationCheck() inside the loop. This lets the script be killed in a well-behaved and traceable way",
+      "method": "Script.CancellationCheck();",
+      "example": "using System.Threading;\n\nConsole.WriteLine(\"Long running loop has started\");\nfor (int i = 0; i < 100; i++)\n{\n    Script.CancellationCheck();\n    Thread.Sleep(2000);\n}"
+    },
+    "powershell": {
+      "noEquivalent": "Script.CancellationCheck() is documented for C# only. The wiki has no PowerShell cancellation article and no PowerShell equivalent exists. Never emit Script.CancellationCheck() in a PowerShell Task and never invent a cmdlet for it",
+      "howToMakeLoopsCancellable": "Emit a real Chat message with Write-Host inside the loop, because Chat message creation is the documented cancellation checkpoint. For tight loops, emit on every Nth iteration to avoid flooding the Chat",
+      "consequence": "A PowerShell loop that produces no Chat messages is not killable by the Terminate button. If the Task genuinely needs a silent long-running loop, say so in the response and recommend writing that Task in C# instead",
+      "example": "param($ItemCount)\n$ErrorActionPreference = 'Stop'\nWrite-Host \"Long running loop has started\"\nfor ($i = 1; $i -le [int]$ItemCount; $i++) {\n    if ($i % 10 -eq 0) { Write-Host \"Processed $i items\" }\n    Start-Sleep -Seconds 2\n}"
+    }
+  },
+  "errorLogging": {
+    "description": "Manually set the state of a Chat message to 'Error occurred in runtime' while still writing a message to the Chat. Use this to log partial errors during a running Task without necessarily aborting it",
+    "csharp": {
+      "method": "Console.WriteLineError(\"This is an error\");",
+      "behavior": "Writes the supplied text to the Chat and simultaneously sets that Chat message state to 'Error occurred in runtime'",
+      "tryCatch": "Combine with try/catch so you can track errors even when the Task runs all the way to completion. This lets you record partial failures inside catch blocks while letting the rest of the Task continue",
+      "trailStatistic": "Every partial error logged via Console.WriteLineError is counted toward the Trail statistic",
+      "finishedTaskState": "If one or more partial errors were logged via Console.WriteLineError, the finished Task state is 'Error occurred in runtime'",
+      "example": "try { Console.WriteLine(\"Processing record\"); /* work that may fail */ } catch (Exception ex) { Console.WriteLineError(\"This is an error: \" + ex.Message); }"
+    },
+    "powershell": {
+      "noEquivalent": "Console.WriteLineError() is documented for C# only. The wiki has no PowerShell error Chat message article and no PowerShell equivalent exists. Never emit Console.WriteLineError in a PowerShell Task",
+      "consequence": "A PowerShell Task cannot mark an individual Chat message as 'Error occurred in runtime', so partial failures do not feed the Trail statistic the way they do in C#. If partial-error tracking matters for this Task, say so and recommend C#",
+      "whatToDoInstead": "Structure the script with $ErrorActionPreference = 'Stop' plus try/catch around each unit of work. Report the failure from the catch block with a clearly marked Write-Host so it is visible in the Chat regardless of Settings, and keep a failure counter for the closing summary. Write-Warning is not a substitute because warning mode is off by default",
+      "example": "param($FolderPath)\n$ErrorActionPreference = 'Stop'\n$failed = 0\nforeach ($file in Get-ChildItem -Path $FolderPath -File) {\n    try {\n        Write-Host \"Processing *$($file.Name)*\"\n        # work that may fail\n    }\n    catch {\n        $failed++\n        Write-Host \"*ERROR* on $($file.Name): $($_.Exception.Message)\"\n    }\n}\nWrite-Host \"Finished with *$failed* failures\""
+    }
+  },
+  "keys": [
+    "C#: if a single key is needed, use the predefined keyDefaultFirst C# string variable (not a const) to access the required secrets or passwords in the script. If multiple keys are needed, use string key parameter key[\"firstKeyName\"], then string key parameter key[\"secondKeyName\"], and so on. Use this for API keys, passwords, and other secrets",
+    "PowerShell: declare $keyDefaultFirst for a single Key, or one param() variable per Key named exactly after the Key. See 'powershellVariables.keyByName' and 'powershellVariables.keyDefaultFirst'",
+    "Never hardcode a password, token or secret in a Task script. Key secrets are encrypted in a local database and decrypted only when needed, which also makes Task scripts safe to share. Hardcoded credentials expose the secret to anyone with the script"
+  ],
+  "parameters": [
+    "C#: access Robogator string parameters dynamically via param[\"ParameterKey\"]. The key is a string, not a constant, and should either be defined by the user or provided in the response so the user knows how to name the Robogator parameter. Do not use it for sensitive keys and secrets, use keys instead",
+    "PowerShell: see 'powershellVariables.parameters'"
+  ],
+  "powershellSkeleton": {
+    "description": "The shape every PowerShell Task should follow",
+    "template": "param($SourceFolder, $keyDefaultFirst, $CurrentTaskTitle)\n$ErrorActionPreference = 'Stop'\n\nWrite-Host \"*$CurrentTaskTitle* started against %$SourceFolder%\"\n\n$processed = 0\n$failed = 0\n\nforeach ($file in Get-ChildItem -Path $SourceFolder -File) {\n    try {\n        # work that may fail\n        $processed++\n        if ($processed % 10 -eq 0) { Write-Host \"Processed $processed files\" }\n    }\n    catch {\n        $failed++\n        Write-Host \"*ERROR* on $($file.Name): $($_.Exception.Message)\"\n    }\n}\n\nWrite-Host \"Finished. Processed *$processed*, failed *$failed*. Open the folder %$SourceFolder%\"",
+    "checklist": [
+      "param() on line 1, nothing above it, every Robogator variable declared there with the exact documented name",
+      "$ErrorActionPreference = 'Stop' immediately after",
+      "No Install-Module, no Set-ExecutionPolicy, no exit, no Read-Host, no custom modules",
+      "Write-Host for everything the user must see, never a bare Write-Host with no argument",
+      "No Write-Verbose, Write-Debug, Write-Warning or Write-Progress for essential output, they are off by default",
+      "A Write-Host inside any long loop so the Terminate button stays responsive",
+      "try/catch per unit of work, failure reported with Write-Host and counted",
+      "A closing summary Chat message",
+      "The response names every Parameter and Key the user must create on the Task, and every module they must install"
+    ]
+  },
+  "moreInformation": {
+    "scopeOfThisDocument": "This specification is self-contained for writing Task scripts. Everything needed for C# and PowerShell Task code is above. Do not fetch anything before writing a script this document already covers",
+    "whenToLookFurther": "Use the wiki when the user asks about the platform rather than the script: creating Accounts and Tasks, adding Parameters and Keys in the UI, Trails, Settings, designer mode, running a Task in the background as a service, import and export, Task finish states, Cosmos",
+    "sitemap": "https://wiki.robogator.io/sitemap.xml",
+    "howToUseIt": "Fetch the sitemap to get the full list of article URLs, pick the one whose slug matches the question, then fetch that article. Article URLs are absolute and end in .html, for example https://wiki.robogator.io/create-a-task.html",
+    "languagePairs": "Scripting articles exist once per language. The slug ends in -csharp.html or -powershell.html, or in -in-csharp-script.html or -in-powershell-script.html. Fetch the one matching the Task language, never the other one",
+    "ifFetchingIsUnavailable": "Many chat clients cannot fetch a second URL. If the sitemap or an article cannot be retrieved, say so and answer only from this document. Never invent Robogator syntax or behaviour that is not stated here",
+    "knownGaps": "The wiki has no PowerShell article for cancellation or for error Chat messages, because no PowerShell equivalent exists. Do not go looking for one. See 'cancellation' and 'errorLogging'"
   }
 }
