@@ -29,10 +29,10 @@
     "featureGap": "Two Robogator features documented for C# have no PowerShell equivalent: Script.CancellationCheck() and Console.WriteLineError(). If the Task genuinely needs a silent long-running cancellable loop or a Chat message flagged as 'Error occurred in runtime', say so and recommend C#. See 'cancellation' and 'errorLogging'"
   },
   "dotnetVersion": "10.0.10",
-  "powerShellSdkVersion": "7.6.6",
+  "powerShellSdkVersion": "7.6.7",
   "codeLanguageRuntimes": {
     "csharp": "Microsoft.CodeAnalysis.CSharp.Scripting (5.9.0)",
-    "powershell": "Microsoft.PowerShell.SDK (7.6.6)",
+    "powershell": "Microsoft.PowerShell.SDK (7.6.7)",
     "note": "These are the two script runtimes the Robogator host embeds. A Task is one or the other"
   },
   "c# approach": [
@@ -68,45 +68,45 @@
     "description": "All NuGet libraries available to a Task script in addition to standard .NET. This list is exhaustive. Do not use any library not listed here and never add one via a reference directive - see 'references'. Each entry is preloaded by the host and reached with a plain using directive for the given namespace. The Robogator host references further libraries for its own internal use; those are NOT available to Task scripts, are not listed here, and must never be used. This list describes the C# scripting host, see 'powershellModules' for PowerShell",
     "pdf": {
       "nuget": "Syncfusion.Pdf.Net.Core",
-      "version": "34.2.7",
+      "version": "35.1.40",
       "namespace": "Syncfusion.Pdf",
       "use": "Create and edit PDFs",
       "images": "PdfBitmap is the Syncfusion type for rendering images in a PDF and uses an image stream PdfBitmap image = new PdfBitmap(imageStream), Syncfusion.Pdf does not accept a System.Drawing.Bitmap in the PdfBitmap constructor. It expects either: a Stream, or a file path"
     },
     "htmlToPdf": {
       "nuget": "Syncfusion.HtmlToPdfConverter.Net.Windows",
-      "version": "34.2.7",
+      "version": "35.1.40",
       "namespace": "Syncfusion.HtmlConverter (not Syncfusion.PDF.HtmlConverter)",
       "use": "Convert HTML to PDF"
     },
     "ocr": {
       "nuget": "Syncfusion.PDF.OCR.Net.Core",
-      "version": "34.2.7",
+      "version": "35.1.40",
       "namespace": "Syncfusion.OCRProcessor",
       "use": "OCR text from scanned PDFs"
     },
     "pdfToImage": {
       "nuget": "Syncfusion.PdfToImageConverter.Net",
-      "version": "34.2.7",
+      "version": "35.1.40",
       "namespace": "Syncfusion.Pdf.Parsing",
       "use": "Render PDF pages to images"
     },
     "sqlServer": {
       "nuget": "Microsoft.Data.SqlClient",
-      "version": "7.0.3",
+      "version": "7.1.1",
       "namespace": "Microsoft.Data.SqlClient",
       "use": "Connect to and query SQL Server databases"
     },
     "browserAutomation": {
       "nuget": "Microsoft.Playwright",
-      "version": "1.62.0",
+      "version": "1.63.0",
       "namespace": "Microsoft.Playwright",
       "use": "Headless/headful browser automation and web scraping",
       "note": "Requires browser binaries in the runtime. If not preinstalled, run Microsoft.Playwright.Program.Main(new string[]{\"install\"}) once before launching a browser. This is the only supported way to drive a browser from a Task"
     },
     "microsoftGraph": {
       "nuget": "Microsoft.Graph",
-      "version": "6.6.0",
+      "version": "6.8.0",
       "namespace": "Microsoft.Graph",
       "use": "Microsoft 365 / Graph API: mail, OneDrive, Teams, users, calendar, etc.",
       "note": "Authenticate by building GraphServiceClient with a credential from Azure.Identity, e.g. new ClientSecretCredential(tenantId, clientId, clientSecret)"
@@ -119,7 +119,7 @@
     },
     "outlookMessages": {
       "nuget": "MsgReader",
-      "version": "6.1.1",
+      "version": "6.2.0",
       "namespace": "MsgReader.Outlook",
       "use": "Parse Outlook .msg and .eml files (subject, body, attachments)"
     },
@@ -138,7 +138,7 @@
     }
   },
   "powershell approach": [
-    "Execution is handled by the hosted PowerShell SDK 7.6.6. The script runs inside the Robogator host process, not in a separate powershell.exe, so it is PowerShell 7 syntax and PowerShell 7 module compatibility",
+    "Execution is handled by the hosted PowerShell SDK 7.6.7. The script runs inside the Robogator host process, not in a separate powershell.exe, so it is PowerShell 7 syntax and PowerShell 7 module compatibility",
     "THE SINGLE MOST IMPORTANT RULE: every Robogator proprietary variable the script uses (Parameters, Keys, Task and Account context, neighbor and followed Task lists, license days) MUST be declared in ONE param() block on the very first line of the script. Nothing may precede it, not even a comment. Only after that declaration are the variables usable in the lines below. The wiki repeats this sentence in every single PowerShell article: to access Robogator proprietary variables with PowerShell, you have to first initialize all variables on the first line of the script and after that it is possible to access the variables in the underlying script lines",
     "The variable names inside param() are not free choice. They are bound by name by the host, they are case-sensitive, and the exact spellings are listed under 'powershellVariables'",
     "The script is a plain script body. Do not wrap the logic in a function that is never called, and do not emit a module manifest",
